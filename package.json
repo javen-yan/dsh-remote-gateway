@@ -1,6 +1,6 @@
 {
   "name": "@fnos/deepseek-harness-gateway",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "commonjs",
   "description": "fnOS authenticated gateway for DeepSeek Harness Web UI.",
