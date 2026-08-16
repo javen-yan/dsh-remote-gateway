@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f7">
+  <title>连接 DeepSeek Harness</title>
+  <link rel="icon" href="./gateway/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./gateway/theme.css">
+  <style>
+    body { display: grid; place-items: center; padding: 36px 20px; }
+    main { width: min(404px, 100%); display: grid; gap: 20px; justify-items: center; }
+
+    .hero { display: grid; gap: 12px; justify-items: center; text-align: center; }
+    .hero-logo img { width: 52px; height: 52px; }
+    .hero-title { font-size: 19px; font-weight: 600; letter-spacing: 0.01em; color: var(--text); }
+    .hero-sub {
+      font-size: 10.5px;
+      color: var(--muted);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-top: -8px;
+    }
+
+    .pair-card { width: 100%; padding: 26px 26px 22px; }
+    .pair-card h1 { margin: 0; font-size: 19px; font-weight: 620; letter-spacing: -0.01em; }
+    .pair-card .lead { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+    .pair-card form { margin-top: 18px; display: grid; gap: 10px; }
+    .btn-block { width: 100%; }
+    .footnote {
+      margin: 0;
+      max-width: 36em;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 24px 16px; }
+      .pair-card { padding: 22px 18px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <div class="hero-logo"><img src="./gateway/favicon.svg" alt="DeepSeek 鲸鱼徽标"></div>
+      <div>
+        <div class="hero-title">DeepSeek Harness</div>
+        <div class="hero-sub">fnOS 安全网关</div>
+      </div>
+    </div>
+
+    <section class="card pair-card" aria-labelledby="pair-title">
+      <header>
+        <h1 id="pair-title">连接此设备</h1>
+        <p class="lead">向管理员获取 6 位配对码，5 分钟内有效。</p>
+      </header>
+      <form id="pair-form" novalidate>
+        <label class="field-label" for="code">配对码</label>
+        <input class="text-input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="······" autofocus>
+        <div class="form-error" id="error" role="alert" aria-live="polite"></div>
+        <button class="btn btn-primary btn-block" id="submit" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg>
+          <span class="btn-label">连接</span>
+        </button>
+      </form>
+    </section>
+
+    <p class="footnote">认证由 fnOS 网关处理，Harness 服务仍只监听本机。</p>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const next = params.get("next") || "./";
+    const errorEl = document.getElementById("error");
+    const form = document.getElementById("pair-form");
+    const input = document.getElementById("code");
+    const submitBtn = document.getElementById("submit");
+    const submitLabel = submitBtn.querySelector(".btn-label");
+
+    const errorIcon =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/\D/g, "").slice(0, 6);
+    });
+
+    function showError(message) {
+      errorEl.innerHTML = `${errorIcon}<span>${message}</span>`;
+      const card = form.closest(".card");
+      card.classList.remove("shake");
+      void card.offsetWidth;
+      card.classList.add("shake");
+      input.focus();
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitLabel.textContent = loading ? "连接中…" : "连接";
+      if (loading) {
+        const spinner = document.createElement("span");
+        spinner.className = "spinner";
+        submitBtn.insertBefore(spinner, submitLabel);
+      } else {
+        submitBtn.querySelector(".spinner")?.remove();
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const code = input.value.trim();
+      if (!/^\d{6}$/.test(code)) {
+        showError("请输入 6 位配对码");
+        return;
+      }
+      errorEl.textContent = "";
+      setLoading(true);
+      try {
+        const response = await fetch("./gateway/pair", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ code })
+        });
+        if (response.ok) {
+          location.href = next;
+          return;
+        }
+        const body = await response.json().catch(() => ({}));
+        showError(body.message || "配对失败，请检查配对码。");
+      } catch {
+        showError("网络错误，请检查连接后重试。");
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

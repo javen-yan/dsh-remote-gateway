@@ -1,0 +1,22 @@
+{
+  "name": "@fnos/deepseek-harness-gateway",
+  "version": "0.1.1",
+  "private": true,
+  "type": "commonjs",
+  "description": "fnOS authenticated gateway for DeepSeek Harness Web UI.",
+  "main": "lib/gateway.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javen-yan/dsh-remote-gateway.git"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "lib",
+    "static"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

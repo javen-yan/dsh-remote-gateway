@@ -1,0 +1,4 @@
+# fnOS starts the gateway from the app lifecycle script so it can own both the
+# Unix socket used by App Center and the optional LAN port. This bundle marker
+# keeps the package installable through dsh's plugin/profile mechanism later.
+[]

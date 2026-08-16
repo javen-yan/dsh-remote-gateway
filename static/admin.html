@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f7">
+  <title>DeepSeek Harness 管理</title>
+  <link rel="icon" href="../gateway/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../gateway/theme.css">
+  <style>
+    main { max-width: 1120px; margin: 0 auto; padding: 28px 24px 48px; }
+    .layout { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 20px; align-items: start; }
+
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: calc(100dvh - 48px);
+    }
+    .sidebar .brand { padding: 4px 4px 14px; border-bottom: 1px solid var(--line); }
+    .sidebar nav { display: grid; gap: 2px; margin-top: 10px; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      color: var(--text-2);
+      font-size: 14px;
+      text-decoration: none;
+      transition: color 0.15s var(--ease), background-color 0.15s var(--ease), border-color 0.15s var(--ease);
+    }
+    .sidebar nav a svg { width: 17px; height: 17px; color: var(--muted); transition: color 0.15s var(--ease); }
+    .sidebar nav a:hover { color: var(--text); background: var(--surface-2); }
+    .sidebar nav a[aria-current="page"] {
+      color: var(--blue-text);
+      background: var(--blue-soft);
+    }
+    .sidebar nav a[aria-current="page"] svg { color: var(--blue-text); }
+    .sidebar-foot {
+      margin-top: auto;
+      padding: 12px 6px 2px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .sidebar-foot .gw { display: inline-flex; align-items: center; gap: 7px; }
+    .sidebar-foot .gw-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+    .sidebar-foot .ver { font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.04em; }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 { margin: 0 0 4px; font-size: 22px; font-weight: 640; letter-spacing: -0.01em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: 13.5px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .utility-links {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .utility-links a {
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s var(--ease), border-color 0.15s var(--ease);
+    }
+    .utility-links a:hover { color: var(--text-2); border-color: var(--line-strong); }
+
+    section.card { margin-bottom: 12px; overflow: hidden; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 20px 4px;
+    }
+    .section-head h2 { margin: 0; font-size: 15px; font-weight: 600; }
+    .live { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); animation: pulse 2.4s var(--ease) infinite; }
+
+    .rows { padding-bottom: 6px; }
+    .row {
+      display: grid;
+      grid-template-columns: 168px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 11px 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 6px;
+    }
+    .row:first-child { margin-top: 0; border-top: 0; }
+    .row-label { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; }
+    .row-label svg { width: 15px; height: 15px; color: var(--muted); }
+    .row-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
+      color: var(--text-2);
+      font-size: 13.5px;
+    }
+
+    .banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid color-mix(in srgb, var(--bad) 28%, transparent);
+      background: var(--bad-dim);
+      color: var(--bad);
+      font-size: 13.5px;
+    }
+    .banner svg { width: 16px; height: 16px; }
+    .banner .retry {
+      margin-left: auto;
+      min-height: 34px;
+      padding: 0 14px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      main { padding: 18px 16px 40px; }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; min-height: 0; }
+      .sidebar-foot { margin-top: 8px; }
+      .page-head { display: block; }
+      .actions { justify-content: flex-start; margin-top: 14px; }
+      .utility-links { justify-content: flex-start; }
+      .row { grid-template-columns: 1fr; gap: 3px; padding: 12px 16px; }
+      .row-value { padding-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="layout">
+      <aside class="card sidebar" aria-label="DeepSeek Harness 网关">
+        <div class="brand">
+          <img src="../gateway/favicon.svg" alt="DeepSeek 鲸鱼徽标">
+          <div>
+            <div class="brand-name">DeepSeek Harness</div>
+            <div class="brand-sub">fnOS Gateway</div>
+          </div>
+        </div>
+        <nav>
+          <a aria-current="page" href="./admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            远程访问
+          </a>
+        </nav>
+        <div class="sidebar-foot">
+          <span class="gw"><span class="gw-dot"></span>网关运行中</span>
+          <span class="ver" id="side-version">v–</span>
+        </div>
+      </aside>
+
+      <div>
+        <header class="page-head">
+          <div>
+            <h1>远程访问</h1>
+            <p class="subtitle">通过 fnOS 网关访问本机 Harness 服务。</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" id="refresh-code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              刷新配对码
+            </button>
+            <button class="btn btn-danger" id="revoke-all">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+              吊销设备
+            </button>
+            <div class="utility-links" id="utility-links" aria-label="辅助入口" hidden>
+              <a id="open-app" href="../" target="_blank" rel="noreferrer">打开应用</a>
+              <a id="open-port" href="#" target="_blank" rel="noreferrer" hidden>端口入口</a>
+              <a id="open-pair" href="../pair" target="_blank" rel="noreferrer">配对页</a>
+            </div>
+          </div>
+        </header>
+
+        <div class="banner" id="error-banner" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <span id="error-text"></span>
+          <button class="btn btn-danger retry" id="retry">重试</button>
+        </div>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>状态</h2>
+            <span class="live"><span class="dot"></span>每 30 秒自动刷新</span>
+          </div>
+          <div class="rows" id="status"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head"><h2>日志</h2></div>
+          <div class="rows" id="logs"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="sr-only" id="sr" aria-live="polite"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const esc = (value) =>
+      String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    const ICONS = {
+      server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
+      gateway: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/><path d="M12 17v5"/><path d="M2 8h20"/></svg>',
+      path: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>',
+      plug: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="m2 22 3-3"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m18 3-4 4h6l-4 4"/></svg>',
+      key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      device: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>',
+      folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+      file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>',
+      copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+      check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    };
+
+    const row = (label, icon, valueHtml) =>
+      `<div class="row"><div class="row-label">${icon}<span>${label}</span></div><div class="row-value">${valueHtml}</div></div>`;
+
+    const pill = (ok) =>
+      `<span class="status-pill ${ok ? "ok" : "bad"}"><span class="dot"></span>${ok ? "运行中" : "不可用"}</span>`;
+
+    const chip = (value, display, label) =>
+      `<span class="code-chip"><code>${esc(display)}</code>` +
+      `<button class="icon-btn" type="button" data-copy="${esc(value)}" aria-label="复制${label}" title="复制">${ICONS.copy}</button></span>`;
+
+    const pairCode = (code) => chip(code, code.replace(/(\d{3})(\d{3})/, "$1 $2"), "配对码").replace("<code>", '<code class="pair-code">');
+
+    function expireBadge(expiresAt) {
+      const ms = expiresAt - Date.now();
+      if (ms <= 0) return '<span class="expire-badge urgent">已过期</span>';
+      const mins = Math.round(ms / 60000);
+      const urgent = mins <= 1;
+      return `<span class="expire-badge${urgent ? " urgent" : ""}">${mins < 1 ? "不足 1 分钟" : `${mins} 分钟后过期`}</span>`;
+    }
+
+    function statusHtml(data) {
+      const exp = data.pairing && data.pairing.expiresAt ? new Date(data.pairing.expiresAt) : null;
+      const activeEntryUrl = data.mode === "port" ? data.portUrl : data.pathUrl;
+      const rows = [
+        row("Harness", ICONS.server, pill(data.upstreamOk)),
+        row("网关", ICONS.gateway, pill(true)),
+        row("当前入口", data.mode === "port" ? ICONS.plug : ICONS.path, data.mode === "port" ? "端口模式" : "路径模式"),
+      ];
+      if (activeEntryUrl) {
+        rows.push(row("入口地址", data.mode === "port" ? ICONS.plug : ICONS.path, chip(activeEntryUrl, activeEntryUrl, "入口地址")));
+      }
+      rows.push(
+        row("配对码", ICONS.key,
+          data.pairing && data.pairing.code
+            ? pairCode(data.pairing.code)
+            : '<span class="muted-text">仅管理页可见</span>'),
+        row("配对过期", ICONS.clock,
+          exp ? `${exp.toLocaleString()}&nbsp;&nbsp;${expireBadge(exp)}` : '<span class="muted-text">—</span>'),
+        row("已配对设备", ICONS.device, `${data.sessions.count} 台设备`),
+        row("管理会话", ICONS.device, `${data.adminSessions ? data.adminSessions.count : 0} 个会话`),
+        row("可写目录", ICONS.folder, (data.writableDirs || []).length
+          ? (data.writableDirs || []).map((dir) => chip(dir, dir, "可写目录")).join("")
+          : '<span class="muted-text">未声明</span>')
+      );
+      return rows.join("");
+    }
+
+    const LOG_LABELS = {
+      install: "安装日志",
+      gatewayInstall: "网关安装日志",
+      gateway: "网关日志",
+      access: "访问日志",
+      dsh: "Harness 日志",
+      dshmarket: "Market 日志",
+    };
+
+    function logsHtml(data) {
+      const entries = Object.entries(data.logs || {}).filter(([, value]) => value);
+      if (entries.length === 0) return '<div class="empty">暂无日志路径</div>';
+      return entries
+        .map(([key, value]) => row(LOG_LABELS[key] || key, ICONS.file, chip(value, value, "日志路径")))
+        .join("");
+    }
+
+    function setUtilityLinks(data) {
+      const appUrl = data.mode === "port" ? data.portUrl : data.pathUrl;
+      if (appUrl) $("open-app").href = appUrl;
+      $("open-port").hidden = !data.portUrl;
+      if (data.portUrl) $("open-port").href = data.portUrl;
+      $("open-pair").href = data.mode === "path" ? `${data.pathUrl || "../"}pair` : `${data.portUrl || "./"}pair`;
+      $("utility-links").hidden = false;
+    }
+
+    function skeletonHtml() {
+      return Array.from({ length: 7 }, () =>
+        `<div class="row"><div class="skeleton" style="width:88px;height:13px"></div><div class="skeleton" style="width:min(320px,70%);height:13px"></div></div>`
+      ).join("");
+    }
+
+    let toastTimer;
+    function toast(message) {
+      const el = $("toast");
+      el.innerHTML = `${ICONS.check}<span>${esc(message)}</span>`;
+      el.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+    }
+
+    function announce(message) {
+      $("sr").textContent = message;
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast("已复制");
+      } catch {
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        try {
+          document.execCommand("copy");
+          toast("已复制");
+        } catch {
+          toast("复制失败，请手动选择复制");
+        }
+        area.remove();
+      }
+    }
+
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-copy]");
+      if (btn) copyText(btn.getAttribute("data-copy"));
+    });
+
+    async function load(initial) {
+      if (initial) $("status").innerHTML = skeletonHtml();
+      try {
+        const response = await fetch("../gateway/status");
+        if (response.status === 401) {
+          location.href = "./admin-login?next=" + encodeURIComponent(location.pathname + location.search);
+          return;
+        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        $("status").innerHTML = statusHtml(data);
+        $("logs").innerHTML = logsHtml(data);
+        $("side-version").textContent = `v${data.version || "?"}`;
+        setUtilityLinks(data);
+        $("error-banner").hidden = true;
+      } catch (error) {
+        if (initial) $("status").innerHTML = "";
+        $("error-text").textContent = `状态加载失败：${error.message}`;
+        $("error-banner").hidden = false;
+      }
+    }
+
+    $("retry").addEventListener("click", () => load(true));
+
+    async function withLoading(btn, fn) {
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner spinner-tinted"></span><span>处理中…</span>';
+      try {
+        await fn();
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }
+
+    $("refresh-code").addEventListener("click", async () => {
+      await withLoading($("refresh-code"), async () => {
+        try {
+          const response = await fetch("../gateway/refresh-pair-code", { method: "POST" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          toast("配对码已刷新");
+          await load();
+        } catch {
+          toast("刷新失败，请重试");
+        }
+      });
+    });
+
+    const revokeBtn = $("revoke-all");
+    const revokeDefault = revokeBtn.innerHTML;
+    let revokeArmed = false;
+    let revokeArmTimer;
+    const disarmRevoke = () => {
+      revokeArmed = false;
+      clearTimeout(revokeArmTimer);
+      revokeBtn.classList.remove("armed");
+      revokeBtn.innerHTML = revokeDefault;
+    };
+    revokeBtn.addEventListener("click", async () => {
+      if (!revokeArmed) {
+        revokeArmed = true;
+        revokeBtn.classList.add("armed");
+        revokeBtn.innerHTML = "确认吊销？";
+        announce("已进入确认状态，再次点击「吊销设备」将吊销全部已配对设备");
+        revokeArmTimer = setTimeout(disarmRevoke, 4000);
+        return;
+      }
+      disarmRevoke();
+      await withLoading(revokeBtn, async () => {
+        try {
+          const response = await fetch("../gateway/revoke-all", { method: "POST" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          toast("已吊销全部设备");
+          await load();
+        } catch {
+          toast("操作失败，请重试");
+        }
+      });
+    });
+
+    load(true);
+    setInterval(() => {
+      if (!document.hidden) load(false);
+    }, 30000);
+  </script>
+</body>
+</html>
