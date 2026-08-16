@@ -120,20 +120,20 @@
       font-size: 13.5px;
     }
 
-    .banner {
+    .inline-error {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 14px;
       padding: 12px 16px;
       border-radius: var(--radius-md);
-      border: 1px solid color-mix(in srgb, var(--bad) 28%, transparent);
-      background: var(--bad-dim);
-      color: var(--bad);
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text-2);
       font-size: 13.5px;
     }
-    .banner svg { width: 16px; height: 16px; }
-    .banner .retry {
+    .inline-error svg { width: 16px; height: 16px; color: var(--muted); }
+    .inline-error .retry {
       margin-left: auto;
       min-height: 34px;
       padding: 0 14px;
@@ -199,10 +199,10 @@
           </div>
         </header>
 
-        <div class="banner" id="error-banner" hidden>
+        <div class="inline-error" id="error-banner" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
           <span id="error-text"></span>
-          <button class="btn btn-danger retry" id="retry">重试</button>
+          <button class="btn btn-ghost retry" id="retry">重新加载</button>
         </div>
 
         <section class="card">
@@ -336,6 +336,11 @@
       $("sr").textContent = message;
     }
 
+    function clearError() {
+      $("error-text").textContent = "";
+      $("error-banner").hidden = true;
+    }
+
     async function copyText(text) {
       try {
         await navigator.clipboard.writeText(text);
@@ -376,11 +381,15 @@
         $("logs").innerHTML = logsHtml(data);
         $("side-version").textContent = `v${data.version || "?"}`;
         setUtilityLinks(data);
-        $("error-banner").hidden = true;
+        clearError();
       } catch (error) {
-        if (initial) $("status").innerHTML = "";
-        $("error-text").textContent = `状态加载失败：${error.message}`;
-        $("error-banner").hidden = false;
+        if (initial) {
+          $("status").innerHTML = "";
+          $("error-text").textContent = `暂时无法加载状态：${error.message}`;
+          $("error-banner").hidden = false;
+          return;
+        }
+        toast("状态刷新失败");
       }
     }
 
