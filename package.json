@@ -1,10 +1,16 @@
 {
-  "name": "@fnos/deepseek-harness-gateway",
-  "version": "0.1.6",
+  "name": "@fnos/dsh-fnos-access",
+  "version": "0.2.0",
   "private": true,
-  "type": "commonjs",
-  "description": "fnOS authenticated gateway for DeepSeek Harness Web UI.",
-  "main": "lib/gateway.js",
+  "type": "module",
+  "description": "fnOS access plugin and edge proxy for DeepSeek Harness.",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./admin-auth": "./lib/admin-auth.cjs",
+    "./edge-proxy": "./lib/edge-proxy.cjs",
+    "./scripts/patch-dsh-core.cjs": "./scripts/patch-dsh-core.cjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/javen-yan/dsh-remote-gateway.git"
@@ -12,7 +18,7 @@
   "files": [
     "cordis.patch.yml",
     "lib",
-    "static"
+    "scripts"
   ],
   "dsh": {
     "bundle": {

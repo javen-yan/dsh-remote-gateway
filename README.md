@@ -1,37 +1,44 @@
-# DeepSeek Harness fnOS Gateway
+# DSH fnOS Access
 
-Authenticated fnOS gateway plugin for DeepSeek Harness Web UI.
+Shared fnOS access layer for DeepSeek Harness.
 
-This package is consumed by the fnOS Full FPK build as a Git dependency:
+This package contains two pieces:
 
-```json
-"@fnos/deepseek-harness-gateway": "git+https://github.com/javen-yan/dsh-remote-gateway.git"
-```
+- a DSH web plugin, `@fnos/dsh-fnos-access`, installed into the `web` profile
+- a thin edge proxy used by fnOS to expose either the App Center path entry or a LAN port entry
 
-The fnOS package embeds this plugin under `runtime/node_modules` during the
-runtime build. The NAS device installs the already-bundled local copy with:
+The proxy does not implement DSH business APIs. It only strips the fnOS path
+prefix, forwards HTTP/WebSocket traffic to `127.0.0.1:3080`, and normalizes
+`Host`/`Origin` to loopback. Authentication, path-prefix shims, the LAN
+`crypto.randomUUID` polyfill, and route gating live inside the DSH plugin.
+
+## fnOS Runtime
+
+The fnOS FPK installs the bundled plugin with:
 
 ```sh
-dsh plugin --profile web add file:$TRIM_APPDEST/runtime/node_modules/@fnos/deepseek-harness-gateway
+dsh plugin --profile web add file:$TRIM_APPDEST/runtime/node_modules/@fnos/dsh-fnos-access
 ```
 
-The gateway supports:
+The runtime build then patches official DSH route packages with deterministic
+gate markers:
 
-- path mode through fnOS App Center: `/app/deepseek_harness/`
-- port mode through LAN: `http://<NAS_IP>:3081/`
-- separate admin login and device pairing sessions
-- loopback proxying to the Harness process on `127.0.0.1:3080`
+- fallback HTML/static gate
+- `/api` RPC gate
+- WebSocket upgrade gate
+- `/plugins` bundle gate
+- `/plugins/events` SSE gate
 
-## Transport Model
+The build fails if any marker is missing.
 
-The gateway treats DSH as an upstream web app instead of reimplementing any DSH
-RPC protocol:
+## Access Model
 
-- `POST /api/<method>` is proxied as the official generic RPC channel.
-- `GET /api/session.export` and other non-HTML responses are streamed through.
-- `/api/events.mux` and `/api/events.host` remain native WebSocket upgrades.
-- `/plugins/events` remains the official EventSource endpoint.
-- `/assets/*`, `/plugins/*`, `/favicon.svg`, and `/manifest.webmanifest` are
-  only rewritten when a path prefix is active.
+- Path mode: `http://<NAS_IP>:5666/app/deepseek_harness/`
+- Port mode: `http://<NAS_IP>:3081/`
+- DSH upstream: `http://127.0.0.1:3080`
+- Login page: `/fnos-access/login`
+- Cookie: `fnos_dsh_access`, HttpOnly, SameSite=Lax
 
-Gateway-owned pages stay under `/pair` and `/gateway/*`.
+There is no pair-code flow. The browser signs in once with the management
+password configured through the fnOS app settings, then continues directly into
+the official DeepSeek Harness Web UI.
