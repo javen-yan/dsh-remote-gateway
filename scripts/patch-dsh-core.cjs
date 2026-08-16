@@ -50,6 +50,7 @@ patchOnce(
 \t\t\t\t\tconst prefix = String(req.headers["x-fnos-external-prefix"] || "");
 \t\t\t\t\tconst next = encodeURIComponent(String(req.headers["x-fnos-external-uri"] || req.url || "/"));
 \t\t\t\t\tres.writeHead(302, { location: \`\${prefix}/fnos-access/login?next=\${next}\`, "cache-control": "no-store" });
+\t\t\t\t\tres.end();
 \t\t\t\t} else {
 \t\t\t\t\tres.writeHead(401, { "content-type": "application/json; charset=utf-8" });
 \t\t\t\t\tres.end(JSON.stringify({ error: "unauthorized" }));
