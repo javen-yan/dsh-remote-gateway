@@ -143,7 +143,7 @@ patchOnce(
   modulesFile,
   "[fnos-access patch] boot graph prefix source",
   `ctx.effect(() => ctx.webServer.tapIndex((html) => injectBootManifest(html, this.composed)), "client-modules: boot manifest injection");`,
-  `ctx.effect(() => ctx.webServer.tapIndex((html) => injectBootManifest(html, this.composed, ctx.webServer.fnosAccessPrefix || "")), "client-modules: boot manifest injection");
+  `ctx.effect(() => ctx.webServer.tapIndex((html) => injectBootManifest(html, this.composed, process.env.FNOS_ACCESS_PREFIX || ctx.webServer.fnosAccessPrefix || "")), "client-modules: boot manifest injection");
 \t\t// [fnos-access patch] boot graph prefix source`
 );
 
