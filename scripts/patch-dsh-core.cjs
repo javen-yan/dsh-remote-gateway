@@ -124,6 +124,31 @@ patchOnce(
 
 patchOnce(
   modulesFile,
+  "[fnos-access patch] boot graph prefix",
+  `function injectBootManifest(html, graph) {
+\tconst script = \`<script>window.__DSH_BOOT__ = \${JSON.stringify(graph).replaceAll("<", "\\\\u003c")}<\\/script>\`;`,
+  `function injectBootManifest(html, graph, prefix = "") {
+\tconst bootGraph = prefix ? {
+\t\t...graph,
+\t\tentries: graph.entries.map((entry) => entry.url?.startsWith("/plugins/") ? {
+\t\t\t...entry,
+\t\t\turl: \`\${prefix}\${entry.url}\`
+\t\t} : entry)
+\t} : graph;
+\t// [fnos-access patch] boot graph prefix
+\tconst script = \`<script>window.__DSH_BOOT__ = \${JSON.stringify(bootGraph).replaceAll("<", "\\\\u003c")}<\\/script>\`;`
+);
+
+patchOnce(
+  modulesFile,
+  "[fnos-access patch] boot graph prefix source",
+  `ctx.effect(() => ctx.webServer.tapIndex((html) => injectBootManifest(html, this.composed)), "client-modules: boot manifest injection");`,
+  `ctx.effect(() => ctx.webServer.tapIndex((html) => injectBootManifest(html, this.composed, ctx.webServer.fnosAccessPrefix || "")), "client-modules: boot manifest injection");
+\t\t// [fnos-access patch] boot graph prefix source`
+);
+
+patchOnce(
+  modulesFile,
   "[fnos-access patch] plugin bundle gate",
   `\tserveBundle = async (req, res) => {
 \t\tif (req.method !== "GET" && req.method !== "HEAD") {`,
@@ -159,6 +184,8 @@ for (const [file, marker] of [
   [connectionFile, "[fnos-access patch] shared gate"],
   [connectionFile, "[fnos-access patch] api gate"],
   [connectionFile, "[fnos-access patch] websocket gate"],
+  [modulesFile, "[fnos-access patch] boot graph prefix"],
+  [modulesFile, "[fnos-access patch] boot graph prefix source"],
   [modulesFile, "[fnos-access patch] plugin bundle gate"],
   [hmrFile, "[fnos-access patch] plugin events gate"],
 ]) {
