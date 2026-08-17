@@ -2,27 +2,18 @@
   "name": "@fnos/dsh-fnos-access",
   "version": "0.2.0",
   "private": true,
-  "type": "module",
-  "description": "fnOS access plugin and edge proxy for DeepSeek Harness.",
-  "main": "lib/index.js",
+  "description": "fnOS edge access proxy for DeepSeek Harness.",
+  "main": "lib/edge-proxy.cjs",
   "exports": {
-    ".": "./lib/index.js",
+    ".": "./lib/edge-proxy.cjs",
     "./admin-auth": "./lib/admin-auth.cjs",
-    "./edge-proxy": "./lib/edge-proxy.cjs",
-    "./scripts/patch-dsh-core.cjs": "./scripts/patch-dsh-core.cjs"
+    "./edge-proxy": "./lib/edge-proxy.cjs"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/javen-yan/dsh-remote-gateway.git"
   },
   "files": [
-    "cordis.patch.yml",
-    "lib",
-    "scripts"
-  ],
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    }
-  }
+    "lib"
+  ]
 }
